@@ -28,7 +28,7 @@ Revisión del código del segundo archivo proporcionado, realizada el 15 de novi
 - `composer install`: completado desde el lockfile. Se utilizan URL oficiales GitHub/codeload para evitar el bloqueo del endpoint de API del proxy.
 - `composer validate --strict` y `composer check-platform-reqs`: correctos.
 - Migraciones, instalación de recursos AdminLTE y compilación de vistas: correctas.
-- `php artisan test --compact`: **70 pruebas aprobadas, 262 aserciones**; SQLite en memoria, sin pruebas omitidas.
+- `php artisan test --compact`: **63 pruebas aprobadas, 240 aserciones**; SQLite en memoria, sin pruebas omitidas.
 - `npm run test:browser`: **11 comprobaciones aprobadas** en Chromium, con servidor real y datos/base/fotos temporales. Incluyen registro, autorización, login/logout, CSRF, médicos, pacientes, archivos, cámara sintética, PDF con imagen, QR decodificado, borrado y ancho de 375 px.
 - `npm ci`, `npm run build` y Laravel Pint: correctos.
 - `npm audit`: **0 avisos**, incluidas las dependencias de desarrollo, en el momento de la revisión.
@@ -43,13 +43,3 @@ Revisión del código del segundo archivo proporcionado, realizada el 15 de novi
 - No se evaluaron datos ni fotografías clínicas del ZIP. Se excluyeron las 72 imágenes/archivos de las carpetas de fotos, el log y las cachés. No se publican ni se necesita decidir cuáles eran reales.
 - No se identificaron credenciales en un `.env`: ese archivo no estaba en el segundo ZIP. No puede afirmarse nada sobre el contenido del primer ZIP, cuya descarga no fue posible.
 - El permiso de personal da acceso al directorio compartido. No hay roles por médico/centro ni auditoría clínica. Las eliminaciones de pacientes son definitivas y requieren copias de seguridad fuera de esta demostración.
-
-## Preparación de la demostración en Render
-
-Se simplificó el README y se retiró su captura de pantalla. Las instrucciones amplias se conservaron en `INSTALACION.md` y el despliegue se documentó en `RENDER.md`.
-
-Se añadieron un contenedor Apache/PHP con recursos compilados y un Blueprint que solicita exclusivamente un servicio Free. La cuenta inicial se crea desde variables privadas, solo al habilitar el modo de demostración; no se incluyen credenciales ni se elevan permisos de cuentas pendientes que ya existan.
-
-La imagen se construyó y ejecutó en este entorno. Durante la compilación se montó temporalmente la cadena de CA del proxy, manteniendo la verificación TLS y sin incorporarla a la imagen. Se comprobaron el inicio de sesión, la protección CSRF, el registro de médicos y pacientes, las fotos privadas, el PDF con imagen, el QR decodificado y la generación de enlaces HTTPS mediante cabeceras del proxy. También se verificó que un segundo arranque no duplica cuentas y no guarda la contraseña de bootstrap en la configuración web cacheada.
-
-Estas comprobaciones validan el contenedor, no un servicio público ya creado en Render. Falta conectar la cuenta del propietario y completar el despliegue. El SQLite y las fotos de esta demo son temporales; no se contrataron servicios de almacenamiento persistente.

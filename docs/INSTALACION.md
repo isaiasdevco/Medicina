@@ -1,6 +1,6 @@
 # Instalación, ejecución y mantenimiento
 
-Esta guía amplía las instrucciones del README.
+Esta guía amplía las instrucciones del README. Para Windows, consulte el [paso a paso con XAMPP](XAMPP.md).
 
 ## Requisitos
 

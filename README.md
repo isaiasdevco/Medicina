@@ -20,6 +20,8 @@ PHP 8.2+, Laravel 12, Eloquent, Blade, AdminLTE, Bootstrap, JavaScript, Vite, SQ
 
 ## Instalación y visualización
 
+En Windows puede seguir el [paso a paso con XAMPP](docs/XAMPP.md).
+
 Se requieren PHP con PDO SQLite, GD, mbstring y XML, Composer 2 y Node.js 22.12 o 24+.
 
 ```bash
@@ -56,9 +58,3 @@ npm audit
 ```
 
 Consulte la [guía de instalación y mantenimiento](docs/INSTALACION.md) para ejecutar las pruebas de navegador, configurar permisos y actualizar una instalación anterior. La [revisión técnica](docs/REVISION.md) describe las correcciones, las verificaciones realizadas y sus limitaciones.
-
-## Demostración en Internet
-
-El proyecto incluye una configuración para el plan Free de Render. Consulte [cómo publicar la demo](docs/RENDER.md) para conectar su cuenta y configurar el acceso. En esa modalidad, los datos y las fotografías son temporales.
-
-La aplicación necesita un servidor PHP y una base de datos; un alojamiento exclusivamente estático, como GitHub Pages, no ejecuta Laravel.
