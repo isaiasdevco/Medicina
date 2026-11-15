@@ -11,6 +11,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         php: ['8.2', '8.4']
     steps:
@@ -41,7 +42,6 @@ jobs:
       - run: php artisan test
       - run: vendor/bin/pint --test app bootstrap/app.php bootstrap/providers.php config database routes tests
       - name: Chromium smoke test
-        if: matrix.php == '8.4'
         run: |
           npx playwright install --with-deps chromium
           npm run test:browser

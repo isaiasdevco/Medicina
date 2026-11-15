@@ -10,7 +10,7 @@ Auth::routes();
 Route::view('/', 'welcome')->name('welcome');
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 
-Route::middleware(['auth', 'can:access-clinic', 'clinical.headers'])->group(function () {
+Route::middleware(['auth', 'clinical.access', 'clinical.headers'])->group(function () {
     Route::get('/lista', [PacienteController::class, 'index'])->name('paciente.index');
     Route::get('/form', [PacienteController::class, 'create'])->name('paciente.create');
     Route::post('/form', [PacienteController::class, 'store'])->name('paciente.store');

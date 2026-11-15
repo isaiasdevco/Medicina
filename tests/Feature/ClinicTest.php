@@ -85,6 +85,18 @@ class ClinicTest extends TestCase
         $this->get('/lista')->assertHeader('Cache-Control', 'max-age=0, no-store, private');
     }
 
+    public function test_unapproved_users_receive_the_same_denial_for_missing_clinical_records(): void
+    {
+        $patient = $this->patient();
+        $this->actingAs(User::factory()->create());
+        foreach ([
+            '/form/'.$patient->id.'/edit', '/form/999999/edit', '/formMedico/999999/edit',
+            '/paciente/999999/foto', '/paciente/pdf/999999', '/lista/qr/999999',
+        ] as $url) {
+            $this->get($url)->assertForbidden();
+        }
+    }
+
     public function test_patient_creation_stores_every_selected_doctor_and_optional_allergies(): void
     {
         $doctors = [$this->doctor()->id, $this->doctor('Segundo médico ficticio')->id];
@@ -129,6 +141,39 @@ class ClinicTest extends TestCase
         $this->actingAs($this->staff())->post('/form', $this->payload(['medico_id' => [$id, $id]]))
             ->assertSessionHasErrors('medico_id.0');
         $this->assertDatabaseCount('pacientes', 0);
+    }
+
+    public static function invalidArrayFields(): array
+    {
+        return [
+            [['medico_id' => '1']],
+            [['medico_id' => null]],
+            [['alergia' => 'Texto de prueba']],
+            [['alergia' => null, 'nombre' => '']],
+            [['alergia' => [['Texto anidado']]]],
+            [['nombre' => ['Texto de prueba']]],
+            [['apellido' => ['Texto de prueba']]],
+            [['fecha_nacimiento' => ['1990-01-01']]],
+            [['enfermedades' => ['Texto de prueba']]],
+        ];
+    }
+
+    #[DataProvider('invalidArrayFields')]
+    public function test_invalid_field_types_show_validation_errors_without_breaking_the_form(array $attributes): void
+    {
+        $this->actingAs($this->staff())->from(route('paciente.create'))
+            ->followingRedirects()->post('/form', $this->payload($attributes))
+            ->assertOk()->assertSee('Revise los siguientes datos:');
+        $this->assertDatabaseCount('pacientes', 0);
+    }
+
+    public function test_invalid_doctor_field_types_show_errors_without_breaking_the_form(): void
+    {
+        $this->actingAs($this->staff())->from(route('medico.create'))
+            ->followingRedirects()->post('/formMedico', [
+                'nombre' => ['Texto de prueba'], 'especialidad' => ['Texto de prueba'],
+            ])->assertOk()->assertSee('Revise los siguientes datos:');
+        $this->assertDatabaseCount('medicos', 0);
     }
 
     public function test_updating_patient_syncs_doctors_and_retains_then_replaces_private_photo(): void

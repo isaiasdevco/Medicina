@@ -112,6 +112,14 @@ try {
             await page.locator('#url').setInputFiles({ name: 'synthetic.png', mimeType: 'image/png', buffer: imageBuffer });
         } else {
             await page.getByRole('button', { name: 'Usar cámara' }).click();
+            await page.waitForFunction(() => document.getElementById('video').srcObject?.active);
+            const cameraTrack = await page.locator('#video').evaluateHandle((video) => video.srcObject.getVideoTracks()[0]);
+            await page.getByRole('button', { name: 'Cerrar cámara' }).click();
+            assert.equal(await cameraTrack.evaluate((track) => track.readyState), 'ended');
+            assert.equal(await page.locator('#video').evaluate((video) => video.srcObject), null);
+            await cameraTrack.dispose();
+            completed('closing the camera releases its video track');
+            await page.getByRole('button', { name: 'Usar cámara' }).click();
             await page.getByRole('button', { name: 'Capturar foto' }).click();
             await page.getByText('Fotografía capturada.', { exact: false }).waitFor();
             assert.equal(await page.locator('#video').evaluate((video) => video.srcObject), null);

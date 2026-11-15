@@ -4,6 +4,13 @@
     <h1>{{ isset($paciente) ? 'Editar paciente' : 'Registrar paciente' }}</h1>
 @stop
 @section('content')
+@php
+    $oldText = collect(session()->getOldInput())->map(fn ($value) => is_scalar($value) ? $value : '');
+    $allergyRows = old('alergia', isset($paciente) && $paciente->alergias ? explode(', ', $paciente->alergias) : ['']);
+    $allergyRows = is_array($allergyRows) ? array_filter($allergyRows, 'is_string') : [''];
+    $selectedDoctors = old('medico_id', isset($paciente) ? $paciente->medicos->modelKeys() : []);
+    $selectedDoctors = is_array($selectedDoctors) ? $selectedDoctors : [];
+@endphp
 @include('partials.alerts')
 @if($datos->isEmpty())
     <div class="alert alert-info">Primero <a href="{{ route('medico.create') }}">registre un médico</a> para poder asignar el paciente.</div>
@@ -16,24 +23,24 @@
             <div class="card card-body">
                 <div class="form-group">
                     <label for="nombre">Nombre</label>
-                    <input id="nombre" name="nombre" required maxlength="255" class="form-control" value="{{ old('nombre', $paciente->nombre ?? '') }}">
+                    <input id="nombre" name="nombre" required maxlength="255" class="form-control" value="{{ $oldText['nombre'] ?? ($paciente->nombre ?? '') }}">
                 </div>
                 <div class="form-group">
                     <label for="apellido">Apellido</label>
-                    <input id="apellido" name="apellido" required maxlength="255" class="form-control" value="{{ old('apellido', $paciente->apellido ?? '') }}">
+                    <input id="apellido" name="apellido" required maxlength="255" class="form-control" value="{{ $oldText['apellido'] ?? ($paciente->apellido ?? '') }}">
                 </div>
                 <div class="form-group">
                     <label for="fecha_nacimiento">Fecha de nacimiento</label>
-                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" required max="{{ now()->format('Y-m-d') }}" class="form-control" value="{{ old('fecha_nacimiento', isset($paciente) ? $paciente->fecha_nacimiento->format('Y-m-d') : '') }}">
+                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" required max="{{ now()->format('Y-m-d') }}" class="form-control" value="{{ $oldText['fecha_nacimiento'] ?? (isset($paciente) ? $paciente->fecha_nacimiento->format('Y-m-d') : '') }}">
                 </div>
                 <div class="form-group">
                     <label for="enfermedades">Enfermedades</label>
-                    <input id="enfermedades" name="enfermedades" required maxlength="255" class="form-control" value="{{ old('enfermedades', $paciente->enfermedades ?? '') }}">
+                    <input id="enfermedades" name="enfermedades" required maxlength="255" class="form-control" value="{{ $oldText['enfermedades'] ?? ($paciente->enfermedades ?? '') }}">
                 </div>
                 <fieldset class="form-group">
                     <legend class="h6 font-weight-bold">Alergias (opcional)</legend>
                     <div id="alergias-container">
-                        @foreach(old('alergia', isset($paciente) && $paciente->alergias ? explode(', ', $paciente->alergias) : ['']) as $alergia)
+                        @foreach($allergyRows ?: [''] as $alergia)
                             <div class="input-group mb-2 allergy-row">
                                 <input name="alergia[]" class="form-control" maxlength="100" aria-label="Alergia" value="{{ $alergia }}">
                                 <div class="input-group-append"><button type="button" class="btn btn-outline-danger remove-allergy" aria-label="Quitar alergia">Quitar</button></div>
@@ -46,7 +53,7 @@
                     <label for="medico_id">Médicos asignados</label>
                     <select id="medico_id" name="medico_id[]" class="form-control" multiple required size="5" aria-describedby="medicos-help">
                         @foreach($datos as $medico)
-                            <option value="{{ $medico->id }}" @selected(in_array($medico->id, old('medico_id', isset($paciente) ? $paciente->medicos->modelKeys() : [])))>{{ $medico->nombre }} — {{ $medico->especialidad }}</option>
+                            <option value="{{ $medico->id }}" @selected(in_array($medico->id, $selectedDoctors))>{{ $medico->nombre }} — {{ $medico->especialidad }}</option>
                         @endforeach
                     </select>
                     <small id="medicos-help" class="form-text text-muted">Seleccione uno o varios. En un ordenador use Ctrl o ⌘ para seleccionar más de uno.</small>
