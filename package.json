@@ -1,0 +1,24 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "test:browser": "node tests/Browser/smoke.mjs"
+    },
+    "devDependencies": {
+        "@popperjs/core": "^2.11.6",
+        "bootstrap": "^5.2.3",
+        "concurrently": "^9.0.1",
+        "jsqr": "^1.4.0",
+        "laravel-vite-plugin": "^3.0",
+        "playwright": "^1.65.1",
+        "pngjs": "^7.0.0",
+        "sass": "^1.99.0",
+        "vite": "^8.0"
+    },
+    "name": "medicina",
+    "engines": {
+        "node": "^22.12.0 || >=24.0.0"
+    }
+}
