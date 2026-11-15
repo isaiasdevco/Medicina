@@ -2,7 +2,7 @@
 
 Medicina2025 es un proyecto académico desarrollado con Laravel para organizar la información de pacientes y médicos en una aplicación web. Su objetivo es facilitar el registro de datos, la asignación de profesionales y la elaboración de documentos de consulta.
 
-El proyecto aplica la arquitectura modelo-vista-controlador, relaciones de bases de datos, validación de formularios y control de acceso. Se presenta como evidencia práctica de desarrollo web y debe utilizarse con información ficticia.
+El proyecto aplica la arquitectura modelo-vista-controlador, relaciones de bases de datos, validación de formularios y control de acceso. Para las pruebas y demostraciones se utilizan datos ficticios.
 
 ## Funcionalidades
 
@@ -57,4 +57,4 @@ composer audit --locked
 npm audit
 ```
 
-Consulte la [guía de instalación y mantenimiento](docs/INSTALACION.md) para ejecutar las pruebas de navegador, configurar permisos y actualizar una instalación anterior. La [revisión técnica](docs/REVISION.md) describe las correcciones, las verificaciones realizadas y sus limitaciones.
+La [guía de instalación](docs/INSTALACION.md) incluye la configuración, las pruebas de navegador y los pasos para actualizar una instalación existente.

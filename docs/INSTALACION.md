@@ -1,20 +1,19 @@
-# Instalación, ejecución y mantenimiento
+# Instalación y configuración
 
-Esta guía amplía las instrucciones del README. Para Windows, consulte el [paso a paso con XAMPP](XAMPP.md).
+Para Windows, consulte también la [guía de XAMPP](XAMPP.md).
 
 ## Requisitos
 
-- PHP 8.2 o superior; probado con PHP 8.4.27.
-- Extensiones PDO SQLite, GD, mbstring, DOM/XML, fileinfo, iconv, OpenSSL, ctype y tokenizer. Curl y ZIP se recomiendan para Composer. Para MySQL se necesita PDO MySQL.
-- Composer 2, Node.js 22.12 o Node.js 24+ y npm.
+- PHP 8.2 o superior con PDO SQLite, GD, mbstring, DOM/XML, fileinfo, iconv, OpenSSL, ctype y tokenizer.
+- Composer 2. Las extensiones Curl y ZIP facilitan la descarga de dependencias.
+- Node.js 22.12 o 24+ y npm.
 - Permisos de escritura en `storage/` y `bootstrap/cache/`.
-- La cámara requiere HTTPS o localhost, permiso del usuario y un dispositivo compatible.
 
 ## Instalación local
 
+Desde la carpeta del proyecto:
+
 ```bash
-git clone https://github.com/isaiasdevco/Medicina.git
-cd Medicina
 composer install --prefer-dist --no-interaction
 npm ci
 cp .env.example .env
@@ -26,101 +25,63 @@ npm run build
 php artisan serve
 ```
 
-No ejecute `cp .env.example .env` sobre una configuración existente. En Windows cree el archivo SQLite vacío con `New-Item database/database.sqlite -ItemType File`, si todavía no existe.
+La configuración predeterminada utiliza SQLite. En Windows, cree el archivo vacío con `New-Item database/database.sqlite -ItemType File` si todavía no existe. No sobrescriba un `.env` existente ni vuelva a generar la clave de una instalación con datos.
 
-Abra la dirección indicada por Artisan. No hace falta un servicio de base de datos externo para SQLite. Los recursos de AdminLTE se generan desde la dependencia Composer y no se versionan. Las URL de archivos GitHub en `composer.lock` usan su servicio oficial `codeload.github.com`, conservando las referencias de cada paquete, para permitir instalaciones detrás del proxy del entorno.
-
-Para desarrollar los recursos de interfaz, ejecute `npm run dev` en otra terminal; al terminar, detenga Vite y vuelva a ejecutar `npm run build` para trabajar sin él. No conserve `public/hot` de otra máquina.
+Los recursos de AdminLTE se instalan desde Composer. Para editar los recursos de interfaz, ejecute `npm run dev` en otra terminal; use `npm run build` para generar la versión compilada.
 
 ## Cuentas y permisos
 
-1. Registre una cuenta desde la interfaz. Al iniciar sesión verá que está pendiente de autorización.
-2. Desde una consola de confianza, el responsable del sistema habilita el acceso:
+Registre una cuenta desde la interfaz y habilite su acceso clínico desde una consola de confianza:
 
-   ```bash
-   php artisan app:authorize-staff tu-correo@example.com
-   ```
+```bash
+php artisan app:authorize-staff tu-correo@example.com
+```
 
-3. Recargue la página. Ya puede gestionar médicos y pacientes.
-
-Para retirar el permiso:
+Para retirar ese permiso:
 
 ```bash
 php artisan app:authorize-staff tu-correo@example.com --revoke
 ```
 
-El permiso `is_staff` no es asignable por los formularios. Todo el personal autorizado comparte el directorio clínico; no existe aislamiento por centro, usuario o médico. No se crean cuentas al ejecutar los seeders. La recuperación de contraseña requiere configurar un servicio de correo real: `MAIL_MAILER=log` solo sirve para desarrollo.
+Las cuentas nuevas no tienen acceso clínico. El personal autorizado comparte el directorio de pacientes y médicos. La recuperación de contraseña requiere configurar un servicio de correo; `MAIL_MAILER=log` se utiliza en desarrollo.
 
-## Modelo y archivos
+## Fotografías y datos
 
-```mermaid
-erDiagram
-    MEDICOS ||--o{ MEDICO_PACIENTE : asignacion
-    PACIENTES ||--o{ MEDICO_PACIENTE : asignacion
-    MEDICOS {
-        bigint id PK
-        string nombre
-        string especialidad
-    }
-    PACIENTES {
-        bigint id PK
-        string nombre
-        string apellido
-        date fecha_nacimiento
-        text alergias
-        string enfermedades
-        text url
-    }
-```
+Las fotografías se guardan en `storage/app/private/pacientes/` y se consultan mediante rutas protegidas. No necesitan `storage:link`. Se admiten JPG, PNG y WebP de hasta 4 MiB y 3000 × 3000 píxeles. La cámara requiere HTTPS o localhost y permiso del navegador.
 
-Las fotos nuevas se guardan en `storage/app/private/pacientes/fotos/`. Solo se entregan desde una ruta autenticada y autorizada; no necesitan `storage:link`. El tamaño máximo admitido es 4 MiB y 3000 × 3000 píxeles. Opcionalmente se puede configurar `PATIENT_PHOTO_ROOT` con una ruta privada fuera del directorio web.
+Eliminar un paciente borra sus asignaciones y su fotografía de forma definitiva. Un médico con pacientes asignados no puede eliminarse hasta reasignarlos. Utilice datos ficticios para las demostraciones.
 
-Eliminar un paciente elimina sus asignaciones y fotografía; **la eliminación es definitiva**. Eliminar un médico asignado se bloquea hasta reasignar los pacientes. Las operaciones de base de datos usan transacciones y los archivos nuevos se limpian si la persistencia falla.
+## Actualizar una instalación
 
-## Actualizar una instalación anterior
+1. Active mantenimiento con `php artisan down` y realice una copia de seguridad de la base y de las fotografías.
+2. Actualice el código y las dependencias conservando `.env` y `APP_KEY`.
+3. Ejecute `php artisan migrate --force`.
+4. Si la instalación guardaba fotografías en el disco público, ejecute `php artisan app:privatize-photos`. Resuelva los archivos ausentes o públicos sin referencia que indique el comando.
+5. Compile con `npm run build`, compruebe la aplicación y ejecute `php artisan up`.
 
-No use `migrate:fresh` en una base existente: borra los datos.
-
-1. Active mantenimiento con `php artisan down` y haga copias privadas verificadas de la base de datos y de las fotos.
-2. Actualice código y dependencias, manteniendo el `.env` y la clave de la instalación.
-3. Ejecute `php artisan migrate --force`. La migración copia el médico anterior de cada paciente a la tabla intermedia antes de retirar la columna antigua y su cascada peligrosa.
-4. Ejecute `php artisan app:privatize-photos`. Recodifica las fotos antiguas referenciadas desde los discos público/local al disco privado, actualiza las referencias y elimina los originales solo después de guardar la nueva referencia. Es repetible.
-5. Si el comando informa archivos ausentes, demasiado grandes o fotos públicas sin referencia, resuélvalos antes de continuar. Las fotos huérfanas deben archivarse fuera del directorio público; el comando no las borra automáticamente. Revise también cualquier enlace público antiguo y elimínelo si no es necesario para otros recursos.
-6. Autorice explícitamente las cuentas de personal, compile los recursos y verifique la aplicación antes de ejecutar `php artisan up`.
-
-No se permite revertir la migración de relaciones si existen pacientes: volver a un único médico descartaría información. Para deshacer esa actualización, restaure una copia verificada.
+No use `migrate:fresh` sobre una instalación con datos. La migración de múltiples médicos conserva las asignaciones anteriores y no permite revertirlas si existen pacientes, para evitar perder información.
 
 ## Pruebas
 
 ```bash
 php artisan test
 vendor/bin/pint --test app bootstrap/app.php bootstrap/providers.php config database routes tests
+npm run build
 composer validate --strict
 composer check-platform-reqs
-npm run build
-npm audit
 composer audit --locked
+npm audit
 ```
 
-Las pruebas PHP fuerzan SQLite en memoria para no tocar su base local. Cubren autenticación y permisos, CRUD, validación, múltiples médicos, restricciones de borrado, migración de datos anteriores, fotos y PDF/QR.
-
-Prueba de navegador, con base y fotografías temporales y cámara sintética:
+Las pruebas PHP utilizan SQLite en memoria. Las pruebas de navegador crean una base temporal, datos ficticios y una cámara sintética:
 
 ```bash
 npx playwright install chromium
 npm run test:browser
 ```
 
-En una máquina sin las bibliotecas del navegador, use el procedimiento de instalación de dependencias de Playwright correspondiente al sistema. Si ya tiene Chromium, puede usar `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/ruta/a/chromium npm run test:browser`.
+Antes de ejecutar las pruebas de navegador, compile los recursos y mantenga la configuración sin cachear (`php artisan config:clear`). El script inicia y detiene su servidor de prueba.
 
-El script inicia y detiene su propio servidor, comprueba CSRF mediante HTTP real, recorre formularios, decodifica el QR y revisa el ancho móvil. No requiere cuentas predeterminadas ni credenciales de una instalación real. Ejecútelo con la configuración sin cachear (`php artisan config:clear`) y después de `npm run build`.
+## Configuración privada
 
-La configuración de GitHub Actions incluida prepara PHP, compila recursos y ejecuta las pruebas; su ejecución remota debe comprobarse en la pestaña Actions. Los resultados observados y sus límites están en [la revisión técnica](REVISION.md).
-
-## Seguridad y despliegue
-
-`.gitignore` excluye `.env`, bases SQLite, volcados SQL, fotos, logs, cachés, ZIP, dependencias y recursos generados. `.env.example` no contiene secretos y desactiva debug.
-
-Para cualquier despliegue fuera del desarrollo local, configure HTTPS, `APP_ENV=production`, `APP_DEBUG=false`, una clave propia, `SESSION_SECURE_COOKIE=true`, correo autenticado y copias de seguridad privadas. El directorio web debe ser exclusivamente `public/`. No exponga los archivos de `storage/app/private/`.
-
-Este proyecto demuestra un flujo de gestión clínica; no se ha certificado para uso con datos reales, ni incorpora controles de cumplimiento normativo, auditoría clínica o recuperación operativa de un sistema hospitalario.
+Mantenga `.env`, bases de datos, logs, copias de seguridad y fotografías fuera del repositorio. El directorio web debe apuntar exclusivamente a `public/`. Para un servidor con HTTPS, configure `APP_ENV=production`, `APP_DEBUG=false` y `SESSION_SECURE_COOKIE=true`.

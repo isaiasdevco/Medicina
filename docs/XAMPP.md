@@ -35,7 +35,7 @@ Entre en [el repositorio](https://github.com/isaiasdevco/Medicina), elija **Code
 C:\proyectos\Medicina
 ```
 
-Dentro de esa carpeta deben estar directamente `artisan`, `composer.json` y `package.json`. Use esta versión del repositorio, que incluye las correcciones, en lugar del ZIP original.
+Dentro de esa carpeta deben estar directamente `artisan`, `composer.json` y `package.json`.
 
 ## 3. Abra PowerShell en esa carpeta
 
@@ -143,7 +143,3 @@ APP_URL=http://localhost:8081
 Desde la carpeta del proyecto ejecute `php artisan config:clear`. En el panel de XAMPP pulse **Start** junto a **Apache**, o reinícielo si ya estaba encendido. Abra `http://localhost:8081` en su computadora y siga el registro y autorización del paso 6. MySQL puede seguir apagado.
 
 El directorio web se limita a `public/`: la base de datos, el código y las fotos privadas quedan fuera de ese directorio. Si Apache informa que el puerto 8081 está ocupado, elija otro puerto libre y cámbielo tanto en el bloque como en `APP_URL` y en la dirección del navegador.
-
-## Alcance de la verificación
-
-La aplicación y sus pruebas se ejecutaron en Linux. Esta guía usa los comandos y la estructura de XAMPP para Windows; no se ejecutó una instalación de XAMPP en una computadora Windows durante la revisión.
