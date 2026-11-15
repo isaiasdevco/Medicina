@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: medicina-demo
+    runtime: docker
+    plan: free
+    healthCheckPath: /up
+    envVars:
+      - key: APP_KEY
+        sync: false
+      - key: APP_LOCALE
+        value: es
+      - key: APP_FALLBACK_LOCALE
+        value: en
+      - key: TRUSTED_PROXIES
+        value: '*'
+      - key: DEMO_MODE
+        value: 'true'
+      - key: DEMO_EMAIL
+        sync: false
+      - key: DEMO_PASSWORD
+        sync: false

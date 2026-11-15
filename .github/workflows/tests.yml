@@ -27,6 +27,8 @@ jobs:
           cache: npm
       - run: composer install --prefer-dist --no-interaction
       - run: composer validate --strict && composer check-platform-reqs
+      - name: Audit PHP dependencies
+        run: composer audit --locked
       - run: npm ci
       - name: Prepare application
         run: |
