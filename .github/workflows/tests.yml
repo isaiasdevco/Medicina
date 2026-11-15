@@ -1,0 +1,45 @@
+name: Application checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.2', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_sqlite, gd, mbstring, dom, xml, fileinfo, iconv
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: composer install --prefer-dist --no-interaction
+      - run: composer validate --strict && composer check-platform-reqs
+      - run: npm ci
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch database/database.sqlite
+          php artisan migrate --force
+          php artisan adminlte:install --only=assets --force
+          npm run build
+      - run: php artisan test
+      - run: vendor/bin/pint --test app bootstrap/app.php bootstrap/providers.php config database routes tests
+      - name: Chromium smoke test
+        if: matrix.php == '8.4'
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:browser
