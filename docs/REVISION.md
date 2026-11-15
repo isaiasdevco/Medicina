@@ -1,45 +1,53 @@
-# Revisión técnica · Medicina2025
+# Revisión del proyecto
 
-Revisión del código del segundo archivo proporcionado, realizada el 15 de noviembre de 2026. Se mantuvieron Laravel y los módulos de pacientes, médicos, fotografías, PDF y QR. La publicación contiene código y recursos de demostración, sin importar datos clínicos del archivo.
+Revisión de `main` para el portafolio académico de AppRo8, realizada el 15 de noviembre de 2026. Se mantuvieron Laravel y los módulos existentes. Todas las pruebas utilizaron información ficticia.
 
-## Hallazgos comprobados y correcciones
+## Problemas corregidos
 
-| Área | Estado encontrado | Corrección |
+- **Inicio de PHPUnit:** `phpunit.xml` apuntaba a `tests/Unit`, una carpeta vacía que Git no guarda. Al quitarla del entorno local se reprodujo el mensaje `Test directory .../tests/Unit not found`, con código de salida 2. Se retiró esa suite y se conservaron las pruebas reales de `tests/Feature`. También se configuró PHPUnit para fallar si no encuentra pruebas.
+- **Formularios:** algunos valores con un tipo incorrecto provocaban un error 500 al volver a mostrar el formulario, aunque la validación ya los había rechazado. Se corrigió la presentación de esos valores en pacientes y médicos y se añadieron pruebas de regresión.
+- **Permisos:** una cuenta sin autorización podía recibir 403 o 404 según existiera el registro solicitado. Ahora se comprueba el permiso clínico antes de buscar el paciente o médico, por lo que no se revela esa diferencia.
+- **Workflow:** Playwright quedó habilitado para PHP 8.2 y 8.4. Un fallo en una versión ya no cancela automáticamente la otra.
+
+## Resultados comprobados en esta revisión
+
+Se preparó una copia limpia de los archivos del proyecto, sin `.env`, `tests/Unit`, cachés de Laravel ni recursos compilados. Se instalaron las dependencias según los lockfiles, se generó una configuración local de prueba y se ejecutaron las migraciones y la compilación. No se reutilizaron los resultados de la revisión anterior.
+
+| Comprobación local | PHP 8.2.35 | PHP 8.4.27 |
 | --- | --- | --- |
-| Acceso | Rutas de pacientes, médicos, PDF y QR sin autenticación | Autenticación y permiso explícito de personal en todas las rutas clínicas, incluidas fotos; registro sin privilegios y autorización/revocación por consola |
-| Configuración sensible | El segundo ZIP no incluía `.env` ni bases de datos; `.env.example` habilitaba debug | Ejemplo sin secretos, debug desactivado, sesiones cifradas y base SQLite para la demostración |
-| Médicos de un paciente | El formulario permitía varios, pero los controladores guardaban solo el primero | Relación muchos a muchos, tabla intermedia con clave única, validación de existencia y sincronización transaccional |
-| Migración de datos | Una sola columna `medico_id` con cascada de eliminación | Migración adicional que conserva las asignaciones anteriores y restringe el borrado de médicos; reversión rechazada si puede perder pacientes/asignaciones |
-| Validación | Alergias opcionales frente a columna obligatoria; reglas distintas al crear/editar; fechas y referencias insuficientes | FormRequest compartida, alergias nulas permitidas, límites de longitud, fechas no futuras y médicos válidos sin duplicados |
-| Edición | Búsquedas por query string que podían devolver `null` | Enlaces con parámetros de ruta y model binding con respuestas 404 |
-| Fotografías | Archivos públicos, eliminación inconsistente y falta de limpieza al borrar pacientes | Disco privado, nombres UUID, límites de tipo/peso/dimensiones y recodificación JPEG; limpieza tras fallos y al reemplazar/eliminar |
-| Fotos anteriores | Fotos referenciadas podían estar en discos público o privado antiguos | Comando repetible de migración; preserva referencias compartidas, reporta ausencias y fotos públicas huérfanas sin borrarlas a ciegas |
-| Cámara | Atributo de vídeo incorrecto y errores visibles solo en consola | Vista previa, captura como archivo, cierre del stream y mensajes para permisos/compatibilidad; captura probada con dispositivo sintético |
-| PDF | Fuentes remotas con un import mal escrito; foto dependiente de un enlace público de almacenamiento | Fuente DejaVu Sans incluida, recursos remotos y PHP desactivados, fotografía embebida desde el disco privado |
-| QR | Enlace al PDF sin comprobar que existiera el paciente ni exigir autenticación | Model binding, autorización y enlace protegido sin información clínica ni credenciales en el QR |
-| Frontend | URLs locales, nombres/IDs de médicos fijos y HTML de formularios mal anidado | Rutas generadas, opciones desde la base, formularios válidos, selección y errores conservados, tablas/formularios adaptables |
-| Dependencias | Laravel 11.37 fuera de soporte y paquetes frontend antiguos | Laravel 12.72, DomPDF 3.1.6 y dependencias actualizadas; ambos lockfiles conservados; dependencias frontend sin uso retiradas |
-| Archivos | Fotos, log, vistas/cache compiladas y `public/hot` de otra máquina | No se importaron esos archivos al Git; recursos de terceros regenerables y traducciones idénticas al paquete excluidos |
-| Documentación/pruebas | README genérico y pruebas de ejemplo mínimas | Instalación y actualización documentadas, pruebas funcionales PHP y de navegador, configuración de CI |
+| Suite de PHPUnit | 74 pruebas aprobadas, 276 aserciones | 74 pruebas aprobadas, 276 aserciones |
+| Playwright con Chromium | 12 comprobaciones aprobadas | 12 comprobaciones aprobadas |
+| Laravel Pint | Aprobado | Aprobado |
+| `composer validate --strict` | Aprobado | Aprobado |
+| `composer check-platform-reqs` | Aprobado | Aprobado |
 
-## Verificación observada
+No hubo pruebas omitidas en esas ejecuciones. También finalizaron correctamente `composer install`, `npm ci`, las migraciones, la instalación de los recursos de AdminLTE y `npm run build`. `npm audit` devolvió cero avisos.
 
-- PHP 8.4.27 y Composer 2.9.2, instalados sin permisos de root a partir de paquetes Debian con índices firmados y del archivo oficial de Composer con SHA-256 verificado.
-- `composer install`: completado desde el lockfile. Se utilizan URL oficiales GitHub/codeload para evitar el bloqueo del endpoint de API del proxy.
-- `composer validate --strict` y `composer check-platform-reqs`: correctos.
-- Migraciones, instalación de recursos AdminLTE y compilación de vistas: correctas.
-- `php artisan test --compact`: **63 pruebas aprobadas, 240 aserciones**; SQLite en memoria, sin pruebas omitidas.
-- `npm run test:browser`: **11 comprobaciones aprobadas** en Chromium, con servidor real y datos/base/fotos temporales. Incluyen registro, autorización, login/logout, CSRF, médicos, pacientes, archivos, cámara sintética, PDF con imagen, QR decodificado, borrado y ancho de 375 px.
-- `npm ci`, `npm run build` y Laravel Pint: correctos.
-- `npm audit`: **0 avisos**, incluidas las dependencias de desarrollo, en el momento de la revisión.
-- Gitleaks 8.24.3: sin detecciones en el código preparado y en el historial local revisado antes de la publicación. Los archivos versionados se comprobaron también para excluir fotos, datos y archivos de entorno privados.
-- Script de instalación del entorno repetido sobre la instalación existente: correcto, sin borrar datos ni regenerar una clave existente.
+El navegador utilizado fue Chromium 156.0.8078.79, controlado por Playwright 1.65.1, con Node.js 24.22.1 sobre Linux. Las ejecuciones locales usaron el Chromium instalado; el workflow de GitHub instala el navegador de Playwright.
 
-## Límites y pendientes
+Las pruebas cubren:
 
-- `composer audit --locked` no pudo completar la consulta de avisos porque el proxy deniega `packagist.org`. La resolución de dependencias terminó sin avisos en los metadatos disponibles, pero **eso no sustituye una auditoría completa**. Se guardó la adición de `packagist.org` y `api.github.com` en el borrador de red del entorno; hay que aplicar esos ajustes y repetir la auditoría.
-- MySQL, SMTP externo, HTTPS en un servidor desplegado y una cámara física no se probaron. La cámara y sus errores se verificaron con un dispositivo sintético de Chromium.
-- El workflow de GitHub Actions incluye `composer audit --locked`. La API del repositorio respondió 403 desde este entorno; no se pudo confirmar el resultado remoto de ese workflow.
-- No se evaluaron datos ni fotografías clínicas del ZIP. Se excluyeron las 72 imágenes/archivos de las carpetas de fotos, el log y las cachés. No se publican ni se necesita decidir cuáles eran reales.
-- No se identificaron credenciales en un `.env`: ese archivo no estaba en el segundo ZIP. No puede afirmarse nada sobre el contenido del primer ZIP, cuya descarga no fue posible.
-- El permiso de personal da acceso al directorio compartido. No hay roles por médico/centro ni auditoría clínica. Las eliminaciones de pacientes son definitivas y requieren copias de seguridad fuera de esta demostración.
+- Registro de cuentas, inicio y cierre de sesión y autorización o revocación del personal.
+- Alta, listado, edición y eliminación de pacientes y médicos, con múltiples médicos por paciente.
+- Validación de datos, conservación de selecciones y presentación de errores sin fallos 500.
+- Restricciones de borrado y migración de asignaciones anteriores sin perder pacientes.
+- Fotografías privadas, reemplazo y eliminación de archivos y limpieza si falla una operación.
+- Captura con cámara sintética, cierre del dispositivo y mensaje al denegar el permiso.
+- PDF con fotografía embebida y QR decodificado hacia el documento correcto, que sigue requiriendo autenticación.
+- Protección CSRF mediante solicitudes HTTP reales y formulario a 375 píxeles de ancho.
+
+## GitHub Actions: verificación pendiente
+
+La auditoría externa informó el fallo de la ejecución [43758679988](https://github.com/isaiasdevco/Medicina/actions/runs/43758679988). Se reprodujo y corrigió su causa en una copia local limpia, pero **no se pudo consultar el resultado remoto desde este entorno**.
+
+El proxy rechaza la conexión HTTPS a `api.github.com` con `CONNECT 403`; `gh api` devuelve `Forbidden` al consultar esa ejecución y el repositorio. Esto impide leer sus trabajos, logs y estado final. El acceso Git por HTTPS sí permite descargar y subir los cambios. La matriz quedó configurada para probar ambas versiones, pero los resultados locales de la tabla no acreditan un CI aprobado.
+
+`composer audit --locked` también permanece bloqueado: la consulta a `packagist.org/api/security-advisories/` es rechazada por el proxy y Composer termina con código 100. No se desactivó la auditoría ni se marcaron estos pasos como aprobados.
+
+Para cerrar la verificación hay que aplicar en el entorno activo las reglas de red para `api.github.com` y `packagist.org`, volver a consultar la nueva ejecución de `main` y confirmar los dos trabajos, incluido Playwright. Si aparecen fallos remotos, deben resolverse antes de considerar terminado el CI.
+
+## Privacidad y alcance
+
+Gitleaks no detectó secretos en el historial revisado ni en los cambios preparados. Se comprobaron además los archivos versionados: no contienen `.env` privados, bases de datos, logs ni fotografías clínicas. `.env.example` mantiene valores de ejemplo sin credenciales. No se modificó la visibilidad del repositorio ni se creó un despliegue público.
+
+No se probó una cámara física, MySQL, correo SMTP externo ni una instalación de XAMPP en Windows. La aplicación continúa siendo un proyecto académico con directorio clínico compartido para el personal autorizado y eliminación definitiva de pacientes; las pruebas no equivalen a una certificación para usar información médica real.
